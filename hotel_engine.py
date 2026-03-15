@@ -25,7 +25,7 @@ def calculate_hotel_cost(city, hotel_name, room_name, meal_plan, rooms, nights, 
     ]
     
     if matching_row.empty:
-        raise ValueError("No valid hotel contract found for the given parameters.")
+        raise ValueError(f"No valid hotel contract found for city={city}, hotel={hotel_name}, room={room_name}, meal={meal_plan}, travel_date={travel_date}, booking_date={booking_date}. Check if the selected combination exists in the data.")
     
     # Assume one matching row
     row = matching_row.iloc[0]
