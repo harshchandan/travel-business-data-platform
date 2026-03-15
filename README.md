@@ -7,10 +7,6 @@ A comprehensive data engineering solution for processing travel contract data an
 ![Pandas](https://img.shields.io/badge/Pandas-2C2D72?style=for-the-badge&logo=pandas&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/DuckDB-FFF?style=for-the-badge&logo=duckdb&logoColor=black)
 
-## 🌟 Live Demo
-
-[🚀 View Live Application](https://harshchandan-travel-business-data-platform.streamlit.app/)
-
 ## 📋 Overview
 
 The Travel Pricing Engine is a robust data engineering project that transforms raw travel contract spreadsheets into structured pricing data and provides an interactive web interface for creating comprehensive travel package quotes. The system supports multi-city itineraries with customizable hotel accommodations and sightseeing services.
@@ -47,7 +43,6 @@ The Travel Pricing Engine is a robust data engineering project that transforms r
 - **Data Processing**: Pandas, DuckDB
 - **File Formats**: Excel (openpyxl), Parquet
 - **Web Framework**: Streamlit
-- **Deployment**: Streamlit Cloud
 - **Version Control**: Git
 
 ## 📁 Project Structure
@@ -151,16 +146,6 @@ travel-pricing-engine/
 - **Hanoi**: Hotels and city services
 - **Da Nang**: Beach resort options
 - **Ho Chi Minh City**: Urban accommodations
-
-## 🚀 Deployment
-
-The application is deployed on Streamlit Cloud with automatic updates from the GitHub repository.
-
-### Deployment Features
-- **Auto-deployment**: Changes to `main` branch deploy automatically
-- **Public Access**: No authentication required
-- **Scalable**: Handles multiple concurrent users
-- **Data Security**: All processing happens server-side
 
 ## 🤝 Contributing
 
