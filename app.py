@@ -18,9 +18,11 @@ land_df = pd.read_parquet('data/marts/land_services.parquet')
 
 st.title("Travel Pricing Engine")
 
-# Initialize session state for hotel segments
+# Initialize session state for hotel segments and editing
 if 'hotel_segments' not in st.session_state:
     st.session_state.hotel_segments = []
+if 'editing_index' not in st.session_state:
+    st.session_state.editing_index = -1
 
 st.sidebar.header("Trip Parameters")
 
@@ -36,68 +38,129 @@ infants = st.sidebar.number_input("Infants", min_value=0, value=0)
 # Markup
 markup_percentage = st.sidebar.number_input("Markup Percentage", min_value=0.0, value=10.0)
 
-# Add Hotel Segment
-st.header("Add Hotel Segment")
-with st.expander("Add New Hotel Segment"):
+# Add/Edit Hotel Segment
+st.header("Add/Edit Hotel Segment")
+
+# Define cities for use in the form
+cities = sorted(hotel_df['city'].unique())
+
+with st.expander("Add New Segment" if st.session_state.editing_index == -1 else "Edit Segment"):
+    # Set defaults based on editing
+    if st.session_state.editing_index != -1:
+        seg = st.session_state.hotel_segments[st.session_state.editing_index]
+        city_default = seg['city']
+        hotel_default = seg['hotel_name']
+        room_default = seg['room_name']
+        meal_default = seg['meal_plan']
+        rooms_default = seg['rooms']
+        nights_default = seg['nights']
+        transport_default = seg['transport_type']
+        vehicle_default = seg['vehicle_type']
+        services_default = seg['selected_services']
+    else:
+        city_default = cities[0]
+        hotel_default = ""
+        room_default = ""
+        meal_default = ""
+        rooms_default = 1
+        nights_default = 1
+        transport_default = "PVT"
+        vehicle_default = ""
+        services_default = []
+    
     # City selection
-    cities = sorted(hotel_df['city'].unique())
-    city = st.selectbox("City", cities, key="add_city")
+    city_index = cities.index(city_default) if city_default in cities else 0
+    city = st.selectbox("City", cities, index=city_index, key="add_city")
     
     # Hotel selection based on city
     hotels_in_city = hotel_df[hotel_df['city'] == city]['hotel_name'].unique()
-    hotel_name = st.selectbox("Hotel Name", sorted(hotels_in_city), key="add_hotel")
+    hotel_index = sorted(hotels_in_city).index(hotel_default) if hotel_default in hotels_in_city else 0
+    hotel_name = st.selectbox("Hotel Name", sorted(hotels_in_city), index=hotel_index, key="add_hotel")
     
     # Room selection based on hotel
     rooms_in_hotel = hotel_df[(hotel_df['city'] == city) & (hotel_df['hotel_name'] == hotel_name)]['room_name'].unique()
-    room_name = st.selectbox("Room Name", sorted(rooms_in_hotel), key="add_room")
+    room_index = sorted(rooms_in_hotel).index(room_default) if room_default in rooms_in_hotel else 0
+    room_name = st.selectbox("Room Name", sorted(rooms_in_hotel), index=room_index, key="add_room")
     
     # Meal plan selection based on room
     meal_plans = hotel_df[(hotel_df['city'] == city) & (hotel_df['hotel_name'] == hotel_name) & (hotel_df['room_name'] == room_name)]['meal_plan'].unique()
-    meal_plan = st.selectbox("Meal Plan", sorted(meal_plans), key="add_meal")
+    meal_index = sorted(meal_plans).index(meal_default) if meal_default in meal_plans else 0
+    meal_plan = st.selectbox("Meal Plan", sorted(meal_plans), index=meal_index, key="add_meal")
     
-    rooms = st.number_input("Number of Rooms", min_value=1, value=1, key="add_rooms")
-    nights = st.number_input("Number of Nights", min_value=1, value=1, key="add_nights")
+    rooms = st.number_input("Number of Rooms", min_value=1, value=rooms_default, key="add_rooms")
+    nights = st.number_input("Number of Nights", min_value=1, value=nights_default, key="add_nights")
     
     # Land services for this segment
     st.subheader("Land Services for this Segment")
-    transport_type = st.selectbox("Transport Type", ["PVT", "SIC"], key="add_transport")
+    transport_index = ["PVT", "SIC"].index(transport_default) if transport_default in ["PVT", "SIC"] else 0
+    transport_type = st.selectbox("Transport Type", ["PVT", "SIC"], index=transport_index, key="add_transport")
     
     if transport_type == "PVT":
         vehicle_types = sorted(land_df['vehicle_type'].dropna().unique())
-        vehicle_type = st.selectbox("Vehicle Type", vehicle_types, key="add_vehicle")
+        vehicle_index = vehicle_types.index(vehicle_default) if vehicle_default in vehicle_types else 0
+        vehicle_type = st.selectbox("Vehicle Type", vehicle_types, index=vehicle_index, key="add_vehicle")
     else:
         vehicle_type = "NA"
     
     # Services for the area (assuming city == area)
     airport = [k for k, v in airport_areas.items() if v == city][0]
     services_in_area = land_df[land_df['airport'] == airport]['service_name'].unique()
-    selected_services = st.multiselect("Selected Services", sorted(services_in_area), key="add_services")
+    services_indices = [sorted(services_in_area).index(s) for s in services_default if s in services_in_area]
+    selected_services = st.multiselect("Selected Services", sorted(services_in_area), default=services_default, key="add_services")
     
-    if st.button("Add Segment"):
-        segment = {
-            'city': city,
-            'hotel_name': hotel_name,
-            'room_name': room_name,
-            'meal_plan': meal_plan,
-            'rooms': rooms,
-            'nights': nights,
-            'transport_type': transport_type,
-            'vehicle_type': vehicle_type,
-            'selected_services': selected_services,
-            'airport': airport
-        }
-        st.session_state.hotel_segments.append(segment)
-        st.success("Hotel segment with land services added!")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.session_state.editing_index != -1:
+            if st.button("Update Segment"):
+                st.session_state.hotel_segments[st.session_state.editing_index] = {
+                    'city': city,
+                    'hotel_name': hotel_name,
+                    'room_name': room_name,
+                    'meal_plan': meal_plan,
+                    'rooms': rooms,
+                    'nights': nights,
+                    'transport_type': transport_type,
+                    'vehicle_type': vehicle_type,
+                    'selected_services': selected_services,
+                    'airport': airport
+                }
+                st.session_state.editing_index = -1
+                st.success("Segment updated!")
+                st.rerun()
+        else:
+            if st.button("Add Segment"):
+                segment = {
+                    'city': city,
+                    'hotel_name': hotel_name,
+                    'room_name': room_name,
+                    'meal_plan': meal_plan,
+                    'rooms': rooms,
+                    'nights': nights,
+                    'transport_type': transport_type,
+                    'vehicle_type': vehicle_type,
+                    'selected_services': selected_services,
+                    'airport': airport
+                }
+                st.session_state.hotel_segments.append(segment)
+                st.success("Hotel segment with land services added!")
+    
+    with col2:
+        if st.session_state.editing_index != -1:
+            if st.button("Cancel Edit"):
+                st.session_state.editing_index = -1
 
 # Display and manage hotel segments
 st.header("Hotel Segments")
 if st.session_state.hotel_segments:
     for i, seg in enumerate(st.session_state.hotel_segments):
-        col1, col2 = st.columns([4, 1])
+        col1, col2, col3 = st.columns([3, 1, 1])
         with col1:
             st.write(f"**Segment {i+1}**: {seg['city']} - {seg['hotel_name']} - {seg['room_name']} ({seg['meal_plan']}) - {seg['rooms']} rooms - {seg['nights']} nights")
             st.write(f"Land: {seg['transport_type']} - {seg['vehicle_type']} - Services: {', '.join(seg['selected_services']) if seg['selected_services'] else 'None'}")
         with col2:
+            if st.button("Edit", key=f"edit_{i}"):
+                st.session_state.editing_index = i
+        with col3:
             if st.button("Remove", key=f"remove_{i}"):
                 st.session_state.hotel_segments.pop(i)
                 st.rerun()
