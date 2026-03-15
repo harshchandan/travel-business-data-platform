@@ -2,21 +2,20 @@
 
 A comprehensive data engineering solution for processing travel contract data and generating dynamic pricing quotes for multi-city travel packages.
 
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-2C2D72?style=for-the-badge&logo=pandas&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/DuckDB-FFF?style=for-the-badge&logo=duckdb&logoColor=black)
 
 ## 📋 Overview
 
-The Travel Pricing Engine is a robust data engineering project that transforms raw travel contract spreadsheets into structured pricing data and provides an interactive web interface for creating comprehensive travel package quotes. The system supports multi-city itineraries with customizable hotel accommodations and sightseeing services.
+The Travel Pricing Engine is a robust data engineering project that transforms travel contract data into structured pricing data and provides modular pricing engines for calculating comprehensive travel package quotes. The system supports multi-city itineraries with customizable hotel accommodations and sightseeing services.
 
 ## ✨ Features
 
 ### 🔄 Data Pipeline
-- **Excel Processing**: Reads and validates travel contract data from Excel spreadsheets
+- **Data Processing**: Reads and validates travel contract data
 - **Data Cleaning**: Standardizes date formats, handles missing values, and ensures data integrity
-- **Parquet Storage**: Efficiently stores processed data in Parquet format for fast querying
+- **Structured Storage**: Efficiently stores processed data for fast querying
 - **Modular Design**: Separate processing for hotel and land service data
 
 ### 🏨 Hotel Pricing Engine
@@ -31,18 +30,10 @@ The Travel Pricing Engine is a robust data engineering project that transforms r
 - **Vehicle Capacity**: Automatic vehicle allocation based on passenger counts
 - **Area-Based Selection**: Services organized by geographic areas
 
-### 🌐 Interactive Web Interface
-- **Cascading Dropdowns**: Intelligent selection based on previous choices
-- **Multi-Segment Packages**: Build complex itineraries with multiple cities
-- **Real-Time Editing**: Modify existing segments without recreation
-- **Comprehensive Quotes**: Detailed cost breakdowns with markup calculations
-
 ## 🛠️ Tech Stack
 
 - **Backend**: Python 3.9+
 - **Data Processing**: Pandas, DuckDB
-- **File Formats**: Excel (openpyxl), Parquet
-- **Web Framework**: Streamlit
 - **Version Control**: Git
 
 ## 📁 Project Structure
@@ -86,36 +77,19 @@ travel-pricing-engine/
    python data_pipeline.py
    ```
 
-4. **Launch the application**
+4. **Run the pricing engines**
    ```bash
-   streamlit run app.py
+   # Import and use the pricing engines in your Python code
+   from hotel_engine import calculate_hotel_cost
+   from land_engine import calculate_land_cost
+   from pricing_engine import calculate_total_cost
    ```
-
-5. **Open your browser** to `http://localhost:8501`
-
-## 📊 Data Sources
-
-### Hotel Data
-- **Source**: Excel spreadsheet (`The Vietnam DMC Data Mart.xlsx`)
-- **Sheet**: `Hotel Prices`
-- **Fields**: City, hotel name, room type, meal plan, pricing, validity dates
-
-### Land Service Data
-- **Source**: Excel spreadsheet (`The Vietnam DMC Data Mart.xlsx`)
-- **Sheet**: `Land Prices`
-- **Fields**: Airport, service type, transport options, pricing, validity dates
-
-### Data Processing
-- **Input**: Raw Excel files
-- **Output**: Cleaned Parquet files optimized for querying
-- **Validation**: Date range checks, data type conversions, null handling
 
 ## 🏗️ Architecture
 
 ### Data Flow
-1. **Raw Data** → Excel files with contract information
-2. **Data Pipeline** → Cleaning, validation, and structuring
-3. **Pricing Engines** → Business logic for cost calculations
+1. **Data Processing** → Cleaning, validation, and structuring
+2. **Pricing Engines** → Business logic for cost calculations
 4. **Web Interface** → User interaction and quote generation
 
 ### Modular Design
@@ -125,22 +99,53 @@ travel-pricing-engine/
 
 ## 💡 Usage
 
-### Creating a Travel Package
+### Using the Pricing Engines
 
-1. **Set Trip Details**
-   - Travel and booking dates
-   - Number of passengers (adults, children, infants)
+```python
+from hotel_engine import calculate_hotel_cost
+from land_engine import calculate_land_cost
+from pricing_engine import calculate_total_cost
+import pandas as pd
 
-2. **Add Hotel Segments**
-   - Select destination city
-   - Choose hotel, room type, and meal plan
-   - Specify number of rooms and nights
-   - Configure land services for that destination
+# Load processed data
+hotel_df = pd.read_parquet('data/marts/hotel_rates.parquet')
+land_df = pd.read_parquet('data/marts/land_services.parquet')
 
-3. **Review and Calculate**
-   - View all package components
-   - Edit segments as needed
-   - Generate final pricing quote
+# Calculate hotel cost
+hotel_cost = calculate_hotel_cost(
+    city="Hanoi",
+    hotel_name="hanoi_hotel_1",
+    room_name="room_name_1",
+    meal_plan="CP",
+    rooms=2,
+    nights=3,
+    travel_date=pd.Timestamp("2026-03-20"),
+    booking_date=pd.Timestamp("2026-03-15"),
+    adults=2,
+    child_4_5=1,
+    child_6_8=0,
+    child_9_11=0,
+    infants=0
+)
+
+# Calculate land cost
+land_cost = calculate_land_cost(
+    airport="HAN",
+    selected_services=["HAN Airport Pick Up - Hanoi"],
+    transport_type="PVT",
+    vehicle_type="4 Seater",
+    travel_date=pd.Timestamp("2026-03-20"),
+    booking_date=pd.Timestamp("2026-03-15"),
+    adults=2,
+    child_4_5=1,
+    child_6_8=0,
+    child_9_11=0,
+    infants=0
+)
+
+# Calculate final price with markup
+total_cost, final_price = calculate_total_cost(hotel_cost, land_cost, markup_percentage=10.0)
+```
 
 ### Supported Destinations
 - **Hanoi**: Hotels and city services
